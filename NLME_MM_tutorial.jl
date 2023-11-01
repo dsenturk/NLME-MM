@@ -5,7 +5,7 @@
 ##              inter-trial EEG response variability in Autism Spectrum Disorder".
 ###########################################################################################
 ## Main functions implemented:
-##    1. NLME_single_generate: Function that generates trial-level ERP responses for fitting
+##    1. NLME_single_generate: Function that generate trial-level ERP responses for fitting
 ##                             single-level NLME model
 ##    2. fit_nlme_mm!: Function that fits single-level NLME model via MM algorithm
 ##    3. NLME_multi_generate: Function that generates trial-level ERP responses for fitting
@@ -27,8 +27,9 @@
 ###########################################################################################
 # using Pkg
 # installed_packages = keys(Pkg.dependencies())
-# packages_to_ensure = ["Distributed", "CSV", "DataFrames", "Distributions", "Plots",
-#                       "LinearAlgebra", "SparseArrays", "JLD2", "SharedArrays"]
+# packages_to_ensure = ["Distributed", "CSV", "DataFrames", "Distributions", "Plots", 
+#                       "LaTeXStrings", "LinearAlgebra", "SparseArrays", "JLD2", 
+#                       "SharedArrays"]
 # for pkg_name in packages_to_ensure
 #     if !(pkg_name in installed_packages)
 #         Pkg.add(pkg_name)
@@ -43,6 +44,7 @@ using Distributed
 using CSV
 using DataFrames
 using Plots
+using LaTeXStrings
 addprocs(4) # number of parallel computation nodes you want to use
 @everywhere begin
     using Distributions
@@ -50,12 +52,12 @@ addprocs(4) # number of parallel computation nodes you want to use
     using SparseArrays
     using JLD2
     using SharedArrays
-    include("preparation_functions.jl")
+    include("preparation_functions_1020.jl")
     include("NLME_classfiles.jl")
-    include("NLME_MM_single.jl")
-    include("NLME_MM_multi.jl")
-    include("NLME_single_simulation.jl")
-    include("NLME_multi_simulation.jl")
+    include("NLME_MM_single_1020.jl")
+    include("NLME_MM_multi_1020.jl")
+    include("NLME_single_simulation_1020.jl")
+    include("NLME_multi_simulation_1020.jl")
 end
 
 ###########################################################################################
@@ -103,6 +105,10 @@ plot(single_dt.t, single_dt.y_mt[:,trial], color="black", label = "")       # ra
 plot!(single_dt.t, y_pred[:,trial], color="red", label = "")                # prediction in red
 plot!([NaN, NaN],[NaN, NaN], color = "black", label = "raw data")
 plot!([NaN, NaN],[NaN, NaN], color = "red", label = "prediction")
+xlims!(0.0, 20.0)                                                           # specify x-axis limits
+xlabel!(L"t")                                                               # set axis titles
+ylabel!(L"Y_{ir}(t)")
+title!("Single-level NLME: Trial-specific predictions")                      # add plot title
 
 
 
@@ -165,7 +171,11 @@ end
 
 subject = 1       # one subject for plotting (i-th subject)
 trial = 1:3       # single(or multiple) trial(s) for plotting (any number between 1 and R_i)
-plot(multi_dt.t, multi_dt.y_mt_array[subject][:,trial], color="black", label = "")       # raw data in black
-plot!(multi_dt.t, y_pred_array[subject][:,trial], color="red", label = "")               # prediction in red
-plot!([NaN, NaN],[NaN, NaN], color = "black", label = "raw data")
+plot(multi_dt.t, multi_dt.y_mt_array[subject][:,trial], color="black", label = "")      # raw data in black
+plot!(multi_dt.t, y_pred_array[subject][:,trial], color="red", label = "")              # prediction in red
+plot!([NaN, NaN],[NaN, NaN], color = "black", label = "raw data")                       # add legends
 plot!([NaN, NaN],[NaN, NaN], color = "red", label = "prediction")
+xlims!(0.0, 20.0)                                                                       # specify x-axis limits
+xlabel!(L"t")                                                                           # set axis titles
+ylabel!(L"Y_{ir}(t)")
+title!("Multi-level NLME: Trial-specific predictions")                                  # add plot title
