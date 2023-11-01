@@ -108,7 +108,7 @@ plot!([NaN, NaN],[NaN, NaN], color = "red", label = "prediction")
 xlims!(0.0, 20.0)                                                           # specify x-axis limits
 xlabel!(L"t")                                                               # set axis titles
 ylabel!(L"Y_{ir}(t)")
-title!("Single-level NLME: Trial-specific predictions")                      # add plot title
+title!("Single-level NLME: Trial-specific predictions")                     # add plot title
 
 
 
