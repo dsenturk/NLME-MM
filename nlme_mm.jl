@@ -88,11 +88,10 @@ function fit_nlme_indep_mm!(
         # Print current evaluation of approximated marginal log-likelihood and relative improvement
         println("iter=", iter, " obj=", obj, " err=", abs(obj - obj_old)/(abs(obj_old) + 1))
 
-        # Check monotonicity: Print a warning message when monotonicity is violated and proceed
-        #                     to next iteration, as marginal log-likelihood is approximated
-        #                     differently in each iteration
-        if obj < obj_old  
-            @warn "monotoniciy violated"
+        # Check monotonicity: Print a warning message when monotonicity is violated and end the algorithm
+        if obj < obj_old 
+            @warn "monotoniciy violated" 
+            break
         end
 
         # Check convergence criterion and stop when criterion is met
@@ -161,10 +160,16 @@ function fit_nlme_unstr_mm!(
         m.iter = iter
         # print obj
         println("iter=", iter, "obj", obj)
-        # check monotonicity
-        obj < obj_old  && (@warn "monotoniciy violated") # && break  #
+
+        # Check monotonicity: Print a warning message when monotonicity is violated and end the algorithm
+        if obj < obj_old 
+            @warn "monotoniciy violated" 
+            break
+        end
+
         # check convergence criterion
         abs(obj - obj_old) < logl_err_threshold * (abs(obj_old) + 1) && break
+
         # warning about non-convergence
         iter == maxiter && (@warn "maximum iterations reached")
     end
@@ -839,17 +844,17 @@ end
 
 
 
-# Function - init_est!(): update the starting values of the NlmeModel type object
+# Function - start_nlme_unstr!(): update the starting values of the NlmeUnstrModel type object
 function start_nlme_unstr!(
-    m::NlmeModel{FloatType},        # NlmeUnstrModel type object constructed by NlmeModel_construct
+    m::NlmeUnstrModel{FloatType},   # NlmeUnstrModel type object constructed by NlmeModel_construct
                                     #       list of values, including:
                                     #       y_mt: trial-level ERP responses (matrix of dimension T*R)
                                     #       t: trial time grid (vector of length T)
                                     #       beta: current estimates of fixed effects (vector of length p)
-                                    #       gamma: current estimates of trial-level random effects (matrix of p*R)
+                                    #       gamma: current estiamtes of trial-level random effects (matrix of p*R)
                                     #       V: current estimates of trial-level variance components (diagonal matrix of dimension p*p)
                                     #       sigma2: current estimate of measurement error variance (scalar)
-                                    # * see the full list of values in 'nlme_classfile.jl"
+                                    # * see full list of values in 'nlme_classfile.jl"
     peak_range::Vector{FloatType},  # range of interval to search for peak-shaped ERP component (vector of length 2)
     dip_range::Vector{FloatType}    # range of interval to search for dip-shaped ERP component (vector of length 2)
     ) where FloatType <: AbstractFloat
@@ -870,7 +875,6 @@ function start_nlme_unstr!(
     #   find_erp: Function that detects peak- or dip-shaped component from a single curve
     #             based on given seracing interval and returns its latency and amplitude
     @inbounds for r in 1:m.R
-    @inbounds for r in 1:m.R
         y_now =  m.y_mt[:,r]
         n1 = find_erp(m.t, y_now, dip_range, 1.0, false)
         p1 = find_erp(m.t, y_now, peak_range, 1.0, true)
@@ -886,15 +890,15 @@ function start_nlme_unstr!(
     m.sigma2 = 10.0
     v_diag = [vec(mapslices(var, m.gamma[1:4,:], dims = 2));1.0]
                 # constant 1.0 is set to avoid potential explode in trial-level varaince of mean magnitude
-    m.V .= zeros(T, 5, 5)
-    m.V_half .= zeros(T, 5, 5)
-    m.V_inv .= zeros(T, 5, 5)
-    m.Delta .= zeros(T, 5, 5)
+    m.V .= zeros(FloatType, 5, 5)
+    m.V_half .= zeros(FloatType, 5, 5)
+    m.V_inv .= zeros(FloatType, 5, 5)
+    m.Delta .= zeros(FloatType, 5, 5)
     for i in 1:5
         m.V[i,i] = v_diag[i]
         m.V_half[i,i] = sqrt(v_diag[i])
         m.V_inv[i,i] = 1/v_diag[i]
         m.Delta[i,i] = sqrt(m.sigma2/v_diag[i])
     end
-    m.gamma .= zeros(T, 5, m.R)
+    m.gamma .= zeros(FloatType, 5, m.R)
 end
