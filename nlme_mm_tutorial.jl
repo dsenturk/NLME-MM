@@ -85,18 +85,18 @@ end
 single_indep_dt = nlme_indep_generate(200,                               # R: number of trials
                                      [6.0, 5.0, 6.0, 14.0, -5.0],        # beta_true: true fixed effects
                                      Diagonal([1.5,4.0,2.0,6.0,10.0]),   # V_true: true covariance matrix of trial-level random effects
-                                     8.0,                                # sigma2_ture: true variance of measurement error
+                                     32.0,                                # sigma2_ture: true variance of measurement error
                                      collect(0:0.8:20))                  # t0: trial time grid
 
 # 1.1.2 calculate starting values of model components ########################################
-start_nlme_indep!(singl_indep_dt,           # m: `NlmeModel` object containing data and model components
+start_nlme_indep!(single_indep_dt,          # m: `NlmeModel` object containing data and model components
                                             #    (list of values see in "nlme_classfiles.jl)
                     [13.0,17.0],            # peak_range: searching interval of peak-shaped component
                     [3.0,7.0])              # dip_range: searching interval of dip-shaped component
 
 
 # 1.1.3 fit single-level NLME model using MM algorithm #######################################
-single_indep_mod = fit_nlme_mm_indep!(single_indep_dt,      # m: `NlmeModel` object containing data and model components
+single_indep_mod = fit_nlme_indep_mm!(single_indep_dt,      # m: `NlmeModel` object containing data and model components
                                                             #    (list of values see in "nlme_classfiles.jl)
                                         20,          # gn_maxiter: maximum number of iterations of Gauss-Newton algorithm in Step 1         
                                         1e-4,        # gn_err_threshold: relative convergence threshold for Gauss-Newton algorithm
@@ -105,9 +105,9 @@ single_indep_mod = fit_nlme_mm_indep!(single_indep_dt,      # m: `NlmeModel` obj
                                         1e-4)        # logl_err_threshold: relative convergence threshold for MM algorithm
 
 # 1.1.4 print out estimated model components #################################################
-println(string("estimated fixed effects (independent): beta = ", singl_indep_dt.beta), "\n")
-println(string("estimated trial-level variance components (independent): V = diag(", diag(singl_indep_dt.V) ,")\n"))
-println(string("estimated variance of measurement error (independent): sigma2 = ", singl_indep_dt.sigma2), "\n")
+println(string("estimated fixed effects (independent): beta = ", single_indep_dt.beta), "\n")
+println(string("estimated trial-level variance components (independent): V = diag(", diag(single_indep_dt.V) ,")\n"))
+println(string("estimated variance of measurement error (independent): sigma2 = ", single_indep_dt.sigma2), "\n")
 
 # 1.1.5 plot raw data and prediction for a single trial #######################################
 y_pred = Matrix{Float64}(undef,
@@ -156,14 +156,14 @@ single_unstr_dt = nlme_unstr_generate(200,                               # R: nu
 
 
 # 1.2.2 calculate starting values of model components ########################################
-start_nlme_unstr!(singl_unstr_dt,           # m: `NlmeModel` object containing data and model components
+start_nlme_unstr!(single_unstr_dt,           # m: `NlmeModel` object containing data and model components
                                             #    (list of values see in "nlme_classfiles.jl)
                     [13.0,17.0],            # peak_range: searching interval of peak-shaped component
                     [3.0,7.0])              # dip_range: searching interval of dip-shaped component
 
 
 # 1.2.3 fit single-level NLME model using MM algorithm #######################################
-single_unstr_mod = fit_nlme_mm_unstr!(single_unstr_dt,      # m: `NlmeModel` object containing data and model components
+single_unstr_mod = fit_nlme_unstr_mm!(single_unstr_dt,      # m: `NlmeModel` object containing data and model components
                                                             #    (list of values see in "nlme_classfiles.jl)
                                         20,          # gn_maxiter: maximum number of iterations of Gauss-Newton algorithm in Step 1         
                                         1e-4,        # gn_err_threshold: relative convergence threshold for Gauss-Newton algorithm
@@ -213,7 +213,7 @@ multi_indep_dt = mnlme_indep_generate(50,                           # n: number 
                                [6.0, 5.0, 6.0, 14.0, -5.0],         # beta_true: true fixed effects
                                Diagonal([1.0,3.0,1.0,3.0,10.0]),    # U_true: true covariance matrix of subject-level random effects
                                Diagonal([1.0,5.0,1.5,6.0,15.0]),    # V_true: true covariance matrix of trial-level random effects
-                               8.0,                                 # sigma2_true: true variance of measurement error
+                               32.0,                                 # sigma2_true: true variance of measurement error
                                collect(0:0.8:20))                   # t0: trial time grid
 
 
@@ -225,12 +225,12 @@ start_mnlme_indep!(multi_indep_dt,      # m: 'MnlmeModel' object containing data
                     10,                 # gn_maxiter: maximum number of iterations for Gauss-Newton algorithm in single-level NLME
                     1e-4,               # gn_err_threshold: relative convergence threshold for Gauss-Newton algorithm in single-level NLME
                     20,                 # halving_maxiter: maximum times of step-halving in single-level NLME
-                    20,                 # maxiter: maximum number of iterations for MM algorithm for single-level NLME
+                    10,                 # maxiter: maximum number of iterations for MM algorithm for single-level NLME
                     1e-4)               # logl_err_threshold: relative convergence threshold for MM algorithm for single-level NLME
 
 
 # 2.1.3 fit single-level NLME model using MM algorithm #######################################
-multi_mod_indep = fit_mnlme_indep_mm!(mult_indep_dt,    # m: 'MnlmeModel' object containing data and model components
+multi_mod_indep = fit_mnlme_indep_mm!(multi_indep_dt,   # m: 'MnlmeModel' object containing data and model components
                                                         #    (list of values seee in "nlme_classfiles.jl") 
                                         10,             # gn_maxiter: maximum number of iterations for Gauss_Newton algorithm in multi-level NLME
                                         1e-4,           # gn_err_threshold: relative convergence threshold for Gauss-Newton algorithm in multi-level NLME
@@ -248,7 +248,7 @@ println(string("estimated variance of measurement error: sigma2 = ", multi_indep
 # 2.1.5 plot raw data and prediction for a single trials #######################################
 y_pred_array = Array{Matrix{Float64}}(undef, multi_indep_dt.n)    # generate array of matrices of length n
 
-for i in 1:multi_dt.n
+for i in 1:multi_indep_dt.n
     # set dimension of prediction matrix (T: number of trial time point; R_i: number of trials of i-th subject)
     y_pred_array[i] = zeros(Float64, multi_indep_dt.T, multi_indep_dt.R_array[i])
     phi_i = multi_mod_indep.beta + multi_mod_indep.alpha[:,i]
@@ -295,7 +295,7 @@ multi_unstr_dt = mnlme_unstr_generate(50,                       # n: number of s
                                [6.0, 5.0, 6.0, 14.0, -5.0],     # beta_true: true fixed effects
                                U_true,                          # U_true: true covariance matrix of subject-level random effects
                                V_true,                          # V_true: true covariance matrix of trial-level random effects
-                               8.0,                             # sigma2_true: true variance of measurement error
+                               32.0,                             # sigma2_true: true variance of measurement error
                                collect(0:0.8:20))               # t0: trial time grid
 
 # 2.2.2 calculate starting values of model components ########################################
@@ -306,12 +306,12 @@ start_mnlme_unstr!(multi_unstr_dt,      # m: 'MnlmeUnstrModel' object containing
                     10,                 # gn_maxiter: maximum number of iterations for Gauss-Newton algorithm in single-level NLME
                     1e-4,               # gn_err_threshold: relative convergence threshold for Gauss-Newton algorithm in single-level NLME
                     20,                 # halving_maxiter: maximum times of step-halving in single-level NLME
-                    20,                 # maxiter: maximum number of iterations for MM algorithm for single-level NLME
+                    10,                 # maxiter: maximum number of iterations for MM algorithm for single-level NLME
                     1e-4)               # logl_err_threshold: relative convergence threshold for MM algorithm for single-level NLME
 
 
 # 2.2.3 fit single-level NLME model using MM algorithm #######################################
-multi_mod_unstr = fit_mnlme_unstr_mm!(mult_unstr_dt,    # m: 'MnlmeUnstrModel' object containing data and model components
+multi_mod_unstr = fit_mnlme_unstr_mm!(multi_unstr_dt,    # m: 'MnlmeUnstrModel' object containing data and model components
                                                         #    (list of values seee in "nlme_classfiles.jl") 
                                         10,             # gn_maxiter: maximum number of iterations for Gauss_Newton algorithm in multi-level NLME
                                         1e-4,           # gn_err_threshold: relative convergence threshold for Gauss-Newton algorithm in multi-level NLME
@@ -331,7 +331,7 @@ println(string("estimated variance of measurement error: sigma2 = ", multi_unstr
 # 2.2.5 plot raw data and prediction for a single trials #######################################
 y_pred_array = Array{Matrix{Float64}}(undef, multi_unstr_dt.n)    # generate array of matrices of length n
 
-for i in 1:multi_dt.n
+for i in 1:multi_unstr_dt.n
     # set dimension of prediction matrix (T: number of trial time point; R_i: number of trials of i-th subject)
     y_pred_array[i] = zeros(Float64, multi_unstr_dt.T, multi_unstr_dt.R_array[i])
     phi_i = multi_mod_unstr.beta + multi_mod_unstr.alpha[:,i]
