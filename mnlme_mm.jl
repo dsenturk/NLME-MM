@@ -100,13 +100,12 @@ function fit_mnlme_indep_mm!(
         # Print current evaluation of approximated marginal log-likelihood and relative improvement
         println("iter=", iter, " obj=", obj, " err=", abs(obj - obj_old)/(abs(obj_old) + 1))
 
-        # Check monotonicity: Print a warning message when monotonicity is violated and proceed
-        #                     to next iteration, as marginal log-likelihood is approximated
-        #                     differently in each iteration
-        if obj < obj_old  
-            @warn "monotoniciy violated"
+        # Check monotonicity: Print a warning message when monotonicity is violated and end the algorithm
+        if obj < obj_old 
+            @warn "monotoniciy violated" 
+            break
         end
-
+        
         # Check convergence criterion and stop when criterion is met
         abs(obj - obj_old) < logl_err_threshold * (abs(obj_old) + 1) && break
 
@@ -192,17 +191,16 @@ function fit_mnlme_unstr_mm!(
 
         # Perform one iteration: overwrite model components and iteration index in m, and save 
         # current evaluation of approximated marginal log-likelihood into obj
-        obj = update_mnlme_mm!(m, gn_maxiter, gn_err_threshold, halving_maxiter)
+        obj = update_mnlme_unstr_mm!(m, gn_maxiter, gn_err_threshold, halving_maxiter)
         m.iter = iter
 
         # Print current evaluation of approximated marginal log-likelihood and relative improvement
         println("iter=", iter, " obj=", obj, " err=", abs(obj - obj_old)/(abs(obj_old) + 1))
 
-        # Check monotonicity: Print a warning message when monotonicity is violated and proceed
-        #                     to next iteration, as marginal log-likelihood is approximated
-        #                     differently in each iteration
-        if obj < obj_old  
-            @warn "monotoniciy violated"
+        # Check monotonicity: Print a warning message when monotonicity is violated and end the algorithm
+        if obj < obj_old 
+            @warn "monotoniciy violated" 
+            break
         end
 
         # Check convergence criterion and stop when criterion is met
@@ -717,10 +715,10 @@ function start_mnlme_indep!(
         subject_test_data = NlmeModel_construct(m.y_mt_array[subject_index], m.t, 5)
 
         # Calculate starting values for single-level NLME (see details in "NLME_MM_single.jl)
-        start_nlme!(subject_test_data, peak_range, dip_range)
+        start_nlme_indep!(subject_test_data, peak_range, dip_range)
 
         # Fit single-level NLME with MM algorithm (see details in "NLME_MM_single.jl")
-        fit_nlme_mm!(subject_test_data, gn_maxiter, gn_err_threshold, halving_maxiter, maxiter, logl_err_threshold)
+        fit_nlme_indep_mm!(subject_test_data, gn_maxiter, gn_err_threshold, halving_maxiter, maxiter, logl_err_threshold)
 
         # Save subject-specific single-level model results for multi-level NLME starting values calculation
         alpha_single_fit[:,subject_index] .= subject_test_data.beta
@@ -1172,6 +1170,7 @@ function mnlme_unstr_mm_update_parallel(
 
     # Create empty variables with dimensions compatible to outcomes for better memory allocation
     R_i = size(gamma_i, 2)
+    p = size(gamma_i, 1)
     T = size(t, 1)
     phi_i = gamma_i .+ alpha_i .+ beta
     e_i = copy(y_i)
@@ -1211,11 +1210,11 @@ function mnlme_unstr_mm_update_parallel(
     sigma_den = sum(diag(Omega_i_inv))
     rr_i = U * N_i_matrix' * Omega_e_i * Omega_e_i' * N_i_matrix * U
     n_omega_n_i = N_i_matrix' * Omega_i_inv * N_i_matrix
-    ss_ir_sum = zeros(T, p, p)
-    m_omega_m_ir_sum = zeros(T, p, p)
+    ss_ir_sum = zeros(FloatType, p, p)
+    m_omega_m_ir_sum = zeros(FloatType, p, p)
     @inbounds for r=1:R_i
-        ss_ir_sum += V * M_i[r]' * Omega_e_i[(TT*r-TT+1):(TT*r),:] * Omega_e_i[(TT*r-TT+1):(TT*r),:]' * M_i[r] * V
-        m_omega_m_ir_sum += M_i[r]' * Omega_i_inv[(TT*r-TT+1):TT*r,(TT*r-TT+1):TT*r] * M_i[r]
+        ss_ir_sum += V * M_i[r]' * Omega_e_i[(T*r-T+1):(T*r),:] * Omega_e_i[(T*r-T+1):(T*r),:]' * M_i[r] * V
+        m_omega_m_ir_sum += M_i[r]' * Omega_i_inv[(T*r-T+1):T*r,(T*r-T+1):T*r] * M_i[r]
     end
 
     return (mm_update_value = [logl_marg; sigma_num; sigma_den],
