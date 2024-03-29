@@ -439,7 +439,7 @@ function NlmeUnstrModel_construct(
     R = size(y_mt, 2)
     beta = Vector{FloatType}(undef, p)
     gamma = Matrix{FloatType}(undef, p, R)
-    V = Matrix{TFloatType}(undef, p, p)
+    V = Matrix{FloatType}(undef, p, p)
     sigma2 = one(FloatType)
     logl = -1e8
     V_half = Matrix{FloatType}(undef, p, p)
@@ -450,7 +450,7 @@ function NlmeUnstrModel_construct(
     pnls_w = zero(FloatType)
     pnls_w1 = zero(FloatType)
     halv_iter = 1
-    halv_err = convert(T, 10.0)
+    halv_err = convert(FloatType, 10.0)
     beta_w = copy(beta)
     beta_w1 = copy(beta)
     delta_beta = copy(beta)
@@ -470,10 +470,10 @@ function NlmeUnstrModel_construct(
     Q_r = LinearAlgebra.QRCompactWYQ{FloatType, Matrix{FloatType}, Matrix{FloatType}}(K_r, R_11_r)
     R_r_right = Matrix{FloatType}(undef, T+p, p+1)
     iter = 1
-    sigma_num = one(T)
-    sigma_den = one(T)
+    sigma_num = one(FloatType)
+    sigma_den = one(FloatType)
     logl_pre = -1e8
-    logl_err = convert(T, 10.0)
+    logl_err = convert(FloatType, 10.0)
     omega_r_inv = Matrix{FloatType}(undef, T, T)
     mm_update_value = SharedMatrix{FloatType}(3, R)
     m_omega_m_series = SharedMatrix{FloatType}(R*p, p)
@@ -488,7 +488,7 @@ function NlmeUnstrModel_construct(
                         R_1, S_1, s_1, S_0, s_0,
                         phi_r, M_r, w_r, K_r, R_11_r, Q_r,
                         R_r_right,
-                        iter, sigma_num, sigma_den, V_num, V_den, logl_pre, logl_err,
+                        iter, sigma_num, sigma_den, logl_pre, logl_err,
                         omega_r_inv, mm_update_value, m_omega_m_series, ss_series,
                         mm_update_sum, m_omega_m_sum, ss_sum)
 end
@@ -568,7 +568,7 @@ mutable struct MnlmeUnstrModel{FloatType <: AbstractFloat}
     rr_seris::Matrix{FloatType}
     m_omega_m_series::Matrix{FloatType}
     ss_series::Matrix{FloatType}
-    mm_update_value::Matrix{TFloatType}
+    mm_update_value::Matrix{FloatType}
     n_omega_n_sum::Matrix{FloatType}
     rr_sum::Matrix{FloatType}
     m_omega_m_sum::Matrix{FloatType}
